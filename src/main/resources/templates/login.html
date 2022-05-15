@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>服务出租系统登陆界面</title>
+    <link rel="stylesheet" href="../static/layui/css/layui.css" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" href="../static/layer/theme/default/layer.css" th:href="@{/layer/theme/default/layer.css}" media="all"/>
+    <link rel="stylesheet" href="../static/css/myCss.css" th:href="@{/css/myCss.css}" media="all"/>
+    <style>
+        /* 覆盖原框架样式 */
+        .layui-elem-quote{background-color: inherit!important;}
+        .layui-input, .layui-select, .layui-textarea{background-color: inherit; padding-left: 30px;}
+
+        body {
+            background-repeat: no-repeat;
+            background-size: cover;
+            min-height: 100vh;
+        }
+        body:before {
+            content: "";
+            /*background-color: rgba(0, 0, 0, .2);*/
+            background-image: url("./images/bg_login03.png");
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            opacity: 0.8;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Head -->
+<!--<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-sm12 layui-col-md12 zyl_mar_01">
+            <blockquote class="layui-elem-quote">讲座预定系统登陆界面</blockquote>
+        </div>
+    </div>
+</div>-->
+<!-- Head End -->
+
+<!-- LoginForm -->
+<div class="zyl_lofo_main_login">
+    <fieldset class="layui-elem-field layui-field-title zyl_mar_02">
+        <legend>欢迎登录服务出租系统</legend>
+    </fieldset>
+    <div class="layui-row layui-col-space15">
+        <form class="layui-form zyl_pad_01" action="">
+            <div class="layui-col-sm12 layui-col-md12">
+                <div class="layui-form-item">
+                    <input type="text" name="userName" lay-verify="required|userName" autocomplete="off" placeholder="账号" class="layui-input">
+                    <i class="layui-icon layui-icon-username zyl_lofo_icon"></i>
+                </div>
+            </div>
+            <div class="layui-col-sm12 layui-col-md12">
+                <div class="layui-form-item">
+                    <input type="password" name="password" lay-verify="required|password" autocomplete="off" placeholder="密码" class="layui-input">
+                    <i class="layui-icon layui-icon-password zyl_lofo_icon"></i>
+                </div>
+            </div>
+            <div class="layui-col-sm12 la yui-col-md12">
+                <button class="layui-btn layui-btn-fluid" lay-submit="" lay-filter="loginSubmit">立即登录</button>
+                <p style="width: 100%;margin-top: 15px">
+                    <a href="http://localhost:8080/service_rental/register.html" class="fl">注册账号</a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- LoginForm End -->
+
+
+
+<!--&lt;!&ndash; Jquery Js &ndash;&gt;
+<script type="text/javascript" src="../static/js/jquery.min.js" th:src="@{/js/jquery.min.js}"></script>-->
+<!-- Layui Js -->
+<script type="text/javascript" src="../static/layui/layui.js" th:src="@{/layui/layui.js}"></script>
+<!-- Jqarticle Js
+<script type="text/javascript" src="../static/js/jparticle.min.js" th:src="@{/js/jparticle.min.js}"></script>-->
+<script>
+    layui.use(['jquery','form'], function(){
+        var form = layui.form;
+        var $ = layui.jquery;  //直接引入官方的Jquery来和平常一样使用
+        //自定义验证规则
+        form.verify({
+            userName: function(value){
+                if(value.length < 3){
+                    return '账号至少得3个字符';
+                }else if(value.length > 10){
+                    return '账号至多得10个字符';
+                }
+            },
+            password: [/^[\S]{3,12}$/,'密码必须3到12位，且不能出现空格']
+        });
+        //监听提交
+        form.on('submit(loginSubmit)', function(data){
+
+            // 设置按钮文字“登录中...”及禁止点击状态
+            $(data.elem).attr('disabled', true).text('登录中...');
+
+            // 网络请求
+            var loadIndex = layer.load(2);
+
+            $.ajax({
+                method: "POST",
+                url: 'http://localhost:8080/service_rental/user/login',
+                data: JSON.stringify(data.field),
+                async: false,
+                contentType: "application/json;charset=UTF-8",
+                dataType: "json",
+                beforeSend: function () {
+                    // TODO...
+                },
+                success: function (res) {
+
+                    layer.close(loadIndex);
+
+                    if (res.code === 1000) {
+                        // 设置注册成功状态
+                        $(data.elem).attr('disabled', true).text('登录成功');
+                        // 提示语
+                        layer.msg('登录成功', {
+                            icon: 1,
+                            time: 1500
+                        });
+                        // 延迟0.5秒
+                        setTimeout(function () {
+                            // 跳转首页页
+                            window.location.href = "http://localhost:8080/service_rental/index.html";
+                        }, 500);
+                        return false;
+                    } else {
+                        // 错误信息
+                        layer.msg(res.message, {icon: 2, anim: 6});
+
+                        // 延迟0.5秒恢复可登录状态
+                        setTimeout(function () {
+                            // 设置按钮状态为登录
+                            var login_text = $(data.elem).text().replace('...', '');
+                            // 设置按钮为可点击状态
+                            $(data.elem).text(login_text).removeAttr('disabled');
+                        }, 500);
+                    }
+                },
+                error: function () {
+                    layer.msg("AJAX请求异常");
+                    layer.alert("AJAX请求异常，返回结果："+res);
+                }
+            });
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

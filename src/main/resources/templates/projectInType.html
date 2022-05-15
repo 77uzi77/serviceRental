@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>项目详情</title>
+    <link rel="stylesheet" href="../static/layui/css/layui.css" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" href="../static/layer/theme/default/layer.css" th:href="@{/layer/theme/default/layer.css}"/>
+    <link rel="stylesheet" href="../static/css/myCss.css" th:href="@{/css/myCss.css}" media="all"/>
+</head>
+<body class="lectureInTypeBg ">
+
+<div class="demoTable layui-form">
+    搜索项目名：
+    <div class="layui-inline ">
+        <input class="layui-input" name="str" id="str" autocomplete="off">
+    </div>
+    <button class="layui-btn" lay-submit lay-filter="search">搜索</button>
+    <a class="layui-btn add">新增</a><br>
+</div>
+<br>
+<div class="myCardListBody">
+
+    <div class="myCardList" th:each="projectBaseDTO : ${#session.getAttribute('projectBaseDTOS')}">
+        <div class="layui-card myCard getLectureInfo" th:id="${projectBaseDTO.proId}">
+            <div class="layui-card-header"><span th:text="${projectBaseDTO.proName}"></span></div>
+            <div class="layui-card-body">
+                <span th:text="'日期：' + ${projectBaseDTO.date}"></span><br>
+                <span th:text="'发布客户：' + ${projectBaseDTO.userName}"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="../static/layui/layui.js" th:src="@{/layui/layui.js}"></script>
+<script type="text/javascript" th:inline="javascript">
+    //JavaScript代码区域
+    layui.use(['element','jquery','form'], function() {
+
+        var element = layui.element;
+        var form = layui.form;
+        var $ = layui.jquery;  //直接引入官方的Jquery来和平常一样使用
+
+        //当点击有queryType属性的标签时，即左侧菜单栏 ，触发点击事件
+        $('.getLectureInfo').on('click', function() {
+            $.ajax({
+                method: "POST",
+                url: 'http://localhost:8080/service_rental/project/queryProjectInfo',
+                data: JSON.stringify({"projectId":this.getAttribute("id")}),
+                contentType: "application/json;charset=UTF-8",
+                dataType: "json",
+                async: false,
+                success: function (res) {
+                    if (res.code === 1000) {
+                        parent.layer.open({
+                            title: '项目信息',
+                            maxWidth: 600,
+                            content: '<form class="layui-form" action="" style="width: 600px;">' +
+                                '<div class="layui-form-item">'+
+                                '    <div class="layui-form-mid layui-word-aux">名称</div>' +
+                                '    <label class="layui-form-label" style="white-space:nowrap;text-align: left">'+res.data.proName+'</label>' +
+                                "</div>"+
+                                '<div class="layui-form-item">'+
+                                '    <div class="layui-form-mid layui-word-aux">内容</div>' +
+                                '    <label class="layui-form-label" style="width: 500px;display:inline-block;text-align: left">'+res.data.content+'</label>' +
+                                "</div>"+
+                                '<div class="layui-form-item">'+
+                                '    <div class="layui-form-mid layui-word-aux">客户名称</div>' +
+                                '    <label class="layui-form-label" style="white-space:nowrap;text-align: left">'+res.data.userName+'</label>' +
+                                "</div>"+
+                                '<div class="layui-form-item">'+
+                                '    <div class="layui-form-mid layui-word-aux">时间</div>\n' +
+                                '    <label class="layui-form-label" style="white-space:nowrap;text-align: left">'+res.data.date+'</label>\n' +
+                                "</div>"+
+                                '</form>',
+                            btn: ['立即报名'],
+                            yes: function(index, layero){
+                                //按钮【立即报名】的回调
+                                var json = '[[${session.user}]]';
+                                var user = JSON.parse(json);
+                                $.ajax({
+                                    method: "POST",
+                                    url: 'http://localhost:8080/service_rental/hire/insertHire',
+                                    data: JSON.stringify({
+                                        "proId": res.data.proId,
+                                        "userId": user.userId
+                                    }),
+                                    async: false,
+                                    contentType: "application/json;charset=UTF-8",
+                                    dataType: "json",
+                                    success: function (res) {
+                                        if (res.code === 1000) {
+                                            // 提示语
+                                            layer.msg('成功报名', {
+                                                icon: 1,
+                                                time: 1500
+                                            });
+                                            //关闭信息框
+                                            layer.closeAll('dialog');
+                                            // 获得frame索引
+                                            var index02 = parent.layer.getFrameIndex(window.name);
+                                            //关闭当前frame
+                                            parent.layer.close(index02);
+                                            //修改成功后刷新父界面
+                                            window.parent.location.reload();
+                                        } else {
+                                            //关闭信息框
+                                            layer.closeAll('dialog');
+                                            // 错误信息
+                                            layer.msg(res.message, {icon: 2, anim: 6});
+                                        }
+                                    },
+                                    error: function () {
+                                        layer.msg("AJAX请求异常");
+                                        layer.alert("AJAX请求异常，返回结果："+res);
+                                    }
+                                });
+                                //return false;
+                            }
+                        });
+                    } else {
+                        // 错误信息
+                        layer.msg(res.message, {icon: 2, anim: 6});
+                    }
+                },
+                error: function () {
+                    layer.msg("AJAX请求异常");
+                    layer.alert("AJAX请求异常，返回结果："+res);
+                }
+            });
+        });
+        //当点击有add属性的标签时，即左侧菜单栏 ，触发点击事件
+        $('.add').on('click', function() {
+            parent.layer.open({
+                title: '项目信息',
+                maxWidth: 500,
+                content: '<div>' +
+                    '        <iframe src="http://localhost:8080/service_rental/projectAdd.html" width="500px" height="450px" frameborder="0" target="_top"></iframe>' +
+                    '    </div>'
+            });
+        });
+
+        //当点击有search属性的标签时，即左侧菜单栏 ，触发点击事件
+        form.on('submit(search)', function(data){
+            $.ajax({
+                method: "POST",
+                url: 'http://localhost:8080/service_rental/project/searchProject',
+                data: JSON.stringify({"str":data.field.str}),
+                async: false,
+                contentType: "application/json;charset=UTF-8",
+                dataType: "json",
+                success: function (res) {
+                    if (res.code === 1000) {
+                        window.location.reload();
+                    } else {
+                        // 错误信息
+                        layer.msg(res.message, {icon: 2, anim: 6});
+                    }
+                },
+                error: function (res) {
+                    layer.msg("AJAX请求异常");
+                    layer.alert("AJAX请求异常，返回结果："+res);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

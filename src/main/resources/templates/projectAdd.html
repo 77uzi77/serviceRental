@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>新增项目信息</title>
+    <link rel="stylesheet" href="../static/layui/css/layui.css" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" href="../static/layer/theme/default/layer.css" th:href="@{/layer/theme/default/layer.css}"/>
+</head>
+<body>
+
+<form class="layui-form" action="">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">项目名</label>
+        <div class="layui-input-inline">
+            <input type="text" name="proName" id="proName" placeholder="请输入项目名" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">日期</label>
+            <div class="layui-input-inline">
+                <input type="text" name="strDate" id="strDate" placeholder="yyyy-MM-dd HH:mm:ss" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">类别</label>
+        <div class="layui-input-inline">
+            <select name="type" lay-verify="required">
+                <option value="快递服务">快递服务</option>
+                <option value="知识服务">知识服务</option>
+                <option value="劳动服务">劳动服务</option>
+                <option value="其他服务">其他服务</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">内容</label>
+        <div class="layui-input-inline">
+            <input type="text" name="content" id="content" placeholder="请输入服务内容" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">新增</button>
+        </div>
+    </div>
+</form>
+
+
+<script type="text/javascript" src="../static/layui/layui.js" th:src="@{/layui/layui.js}"></script>
+<script type="text/javascript" th:inline="javascript">
+    layui.use(['form', 'laydate'], function(){
+
+        var form = layui.form;
+        var $ = layui.jquery;  //直接引入官方的Jquery来和平常一样使用
+        var later = layer;
+        var laydate = layui.laydate;
+
+        //日期时间选择器
+        laydate.render({
+            elem: '#strDate'
+            ,type: 'datetime'
+        });
+        //监听提交
+        form.on('submit(formDemo)', function(data){
+            $.ajax({
+                method: "POST",
+                url: 'http://localhost:8080/service_rental/project/insertProject',
+                data: JSON.stringify(data.field),
+                async: false,
+                contentType: "application/json;charset=UTF-8",
+                dataType: "json",
+                success: function (res) {
+                    if (res.code === 1000) {
+                        // 提示语
+                        layer.msg('成功发布', {
+                            icon: 1,
+                            time: 1500
+                        });
+                        // 获得frame索引
+                        var index02 = parent.layer.getFrameIndex(window.name);
+                        //关闭当前frame
+                        parent.layer.close(index02);
+                        //修改成功后刷新父界面
+                        window.parent.location.reload();
+                    } else {
+                        // 错误信息
+                        layer.msg(res.message, {icon: 2, anim: 6});
+                    }
+                },
+                error: function () {
+                    layer.msg("AJAX请求异常");
+                    layer.alert("AJAX请求异常，返回结果："+res);
+                }
+            });
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

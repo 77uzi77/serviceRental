@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>项目信息</title>
+    <link rel="stylesheet" href="../static/layui/css/layui.css" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" href="../static/layer/theme/default/layer.css" th:href="@{/layer/theme/default/layer.css}"/>
+</head>
+<body>
+
+<table class="layui-hide" id="projectData" lay-filter="getProjectData"></table>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-mini" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-mini" lay-event="del">删除</a>
+</script>
+
+
+<script type="text/javascript" src="../static/js/jquery.min.js" th:src="@{/js/jquery.min.js}"></script>
+<script type="text/javascript" src="../static/layui/layui.js" th:src="@{/layui/layui.js}"></script>
+<script type="text/javascript" th:inline="javascript">
+    layui.use('table', function(){
+
+        var table = layui.table;
+        var $ = layui.jquery;
+
+        table.render({
+            elem: '#projectData'
+            ,url:'http://localhost:8080/service_rental/project/selectAllProjects'
+            ,method:'POST'
+            ,page: true
+            ,id : 'projectTable'
+            ,cols: [
+                    [
+                        {field:'proId', width:60, title: 'ID', sort: true}
+                        ,{field:'userId', width:100, title: 'userID', sort: true}
+                        ,{field:'proName', width:120, title: '项目', sort: true}
+                        ,{field:'content', width: 180, title: '项目内容'}
+                        ,{field:'type', width:100, title: '类型', sort: true}
+                        ,{field:'date', width:200, title: '服务时间', sort: true}
+                        ,{field:'right', title: '操作', width:250,toolbar:"#barDemo"}
+                ]
+            ]
+        });
+        //监听工具条
+        table.on('tool(getProjectData)', function(obj){
+            var data = obj.data;
+            var json = '[[${session.user}]]';
+            var user = JSON.parse(json);
+            if(obj.event === 'del'){
+               layer.confirm('确定删除该项目吗', function(index){
+                   console.log(data);
+                   $.ajax({
+                       url: "http://localhost:8080/service_rental/project/deleteProject",
+                       type: "POST",
+                       data: JSON.stringify({
+                           "proId": data.proId
+                       }),
+                       async: false,
+                       contentType: "application/json;charset=UTF-8",
+                       dataType: "json",
+                       success: function(res){
+                           if (res.code === 1000) {
+                               // 提示语
+                               layer.msg('成功删除该项目', {
+                                   icon: 1,
+                                   time: 1500
+                               });
+                               //关闭弹框
+                               layer.close(index);
+                               // 获得frame索引
+                               var index02 = parent.layer.getFrameIndex(window.name);
+                               //关闭当前frame
+                               parent.layer.close(index02);
+                               //修改成功后刷新父界面
+                               window.parent.location.reload();
+                           } else {
+                               // 错误信息
+                               layer.msg(res.message, {icon: 2, anim: 6});
+                           }
+                       }
+                   });
+               });
+            }else if(obj.event === 'edit'){
+               $.ajax({
+                   url: "http://localhost:8080/service_rental/project/setEditProject",
+                   type: "POST",
+                   data: JSON.stringify({
+                       "proId": data.proId,
+                       "userId": data.userId,
+                       "proName": data.proName,
+                       "content": data.content,
+                       "type": data.type
+                   }),
+                   async: false,
+                   contentType: "application/json;charset=UTF-8",
+                   dataType: "json",
+                   success: function(res){
+                       if (res.code === 1000) {
+                           parent.layer.open({
+                               title: '项目信息',
+                               maxWidth: 600,
+                               content: '<div>' +
+                                   '        <iframe src="http://localhost:8080/service_rental/projectUpdate.html" width="500px" height="350px" frameborder="0" target="_top"></iframe>' +
+                                   '    </div>'
+                           });
+                       } else {
+                           // 错误信息
+                           layer.msg(res.message, {icon: 2, anim: 6});
+                       }
+                   }
+               });
+           }
+        });
+    });
+</script>
+</body>
+</html>

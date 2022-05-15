@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>用户服务接受</title>
+    <link rel="stylesheet" href="../static/layui/css/layui.css" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" href="../static/layer/theme/default/layer.css" th:href="@{/layer/theme/default/layer.css}"/>
+    <link rel="stylesheet" href="../static/css/myCss.css" th:href="@{/css/myCss.css}" media="all"/>
+</head>
+<body class="lectureInTypeBg myCardListBody">
+
+<div class="layui-card myCardList" th:each="hireDTO : ${#session.getAttribute('hireDTOList')}">
+    <div class="deleteOrder myCard" th:id="${hireDTO.hireId}">
+        <div class="layui-card-header"><span th:text="${hireDTO.proName}"></span></div>
+        <div class="layui-card-body">
+            <span th:text="'日期：' + ${hireDTO.date}"></span><br>
+            <span th:if="${hireDTO.isLate} eq false">
+                  <span class="layui-badge layui-bg-green">可用</span>
+            </span>
+            <span th:if="${hireDTO.isLate} eq true">
+                  <span class="layui-badge">已结束</span>
+            </span>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="../static/layui/layui.js" th:src="@{/layui/layui.js}"></script>
+<script type="text/javascript" th:inline="javascript">
+    //JavaScript代码区域
+    layui.use(['element','jquery','form'], function() {
+
+        var element = layui.element;
+        var form = layui.form;
+        var $ = layui.jquery;  //直接引入官方的Jquery来和平常一样使用
+
+        //当点击有queryType属性的标签时，即左侧菜单栏 ，触发点击事件
+        $('.deleteOrder').on('click', function() {
+            var json = '[[${session.user}]]';
+            var user = JSON.parse(json);
+            var json2 = '[[${session.role}]]';
+            var role = JSON.parse(json2);
+            var that = this;
+            var msg = "";
+            if(1 === role.type){
+                msg = '确定删除该服务项目吗';
+            }
+            if(2 === role.type){
+                msg = '确定删除该接受请求吗';
+            }
+            layer.confirm(msg, function(index){
+                $.ajax({
+                    url: "http://localhost:8080/service_rental/hire/deleteHire",
+                    type: "POST",
+                    data: JSON.stringify({"hireId":that.getAttribute("id")}),
+                    async: false,
+                    contentType: "application/json;charset=UTF-8",
+                    dataType: "json",
+                    success: function(res){
+                        if (res.code === 1000) {
+                            // 提示语
+                            layer.msg('删除成功', {
+                                icon: 1,
+                                time: 1500
+                            });
+                            //关闭弹框
+                            layer.close(index);
+                            // 获得frame索引
+                            var index02 = parent.layer.getFrameIndex(window.name);
+                            //关闭当前frame
+                            parent.layer.close(index02);
+                            //修改成功后刷新父界面
+                            window.parent.location.reload();
+                        } else {
+                            // 错误信息
+                            layer.msg(res.message, {icon: 2, anim: 6});
+                        }
+                    }
+                });
+            });
+        });
+
+    });
+</script>
+</body>
+</html>

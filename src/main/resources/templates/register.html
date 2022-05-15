@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>服务出租系统注册界面</title>
+    <link rel="stylesheet" href="../static/layui/css/layui.css" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" href="../static/layer/theme/default/layer.css" th:href="@{/layer/theme/default/layer.css}" media="all"/>
+    <link rel="stylesheet" href="../static/css/myCss.css" th:href="@{/css/myCss.css}" media="all"/>
+    <style>
+        /* 覆盖原框架样式 */
+        .layui-elem-quote{background-color: inherit!important;}
+        .layui-input, .layui-select, .layui-textarea{background-color: inherit; padding-left: 30px;}
+
+        body {
+            background-repeat: no-repeat;
+            background-size: cover;
+            min-height: 100vh;
+        }
+        body:before {
+            content: "";
+            /*background-color: rgba(0, 0, 0, .2);*/
+            background-image: url("./images/bg_login03.png");
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            opacity: 0.8;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+
+<!-- Head -->
+<!--<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-sm12 layui-col-md12 zyl_mar_01">
+            <blockquote class="layui-elem-quote">讲座预定系统登陆界面</blockquote>
+        </div>
+    </div>
+</div>-->
+<!-- Head End -->
+
+<!-- LoginForm -->
+<div class="zyl_lofo_main_register">
+    <fieldset class="layui-elem-field layui-field-title zyl_mar_02">
+        <legend>欢迎注册服务出租系统</legend>
+    </fieldset>
+    <div class="layui-row layui-col-space15">
+        <form class="layui-form zyl_pad_01" action="">
+            <div class="layui-col-sm12 layui-col-md12">
+                <div class="layui-form-item">
+                    <input type="text" name="userName" lay-verify="required|userName" autocomplete="off" placeholder="账号" class="layui-input">
+                    <i class="layui-icon layui-icon-username zyl_lofo_icon"></i>
+                </div>
+            </div>
+            <div class="layui-col-sm12 layui-col-md12">
+                <div class="layui-form-item">
+                    <input type="password" name="password" lay-verify="required|password" autocomplete="off" placeholder="密码" class="layui-input">
+                    <i class="layui-icon layui-icon-password zyl_lofo_icon"></i>
+                </div>
+            </div>
+            <div class="layui-col-sm12 layui-col-md12">
+                <div class="layui-form-item">
+                    <input type="password" name="password02" lay-verify="required|password02" autocomplete="off" placeholder="确认密码" class="layui-input">
+                    <i class="layui-icon layui-icon-password zyl_lofo_icon"></i>
+                </div>
+            </div>
+            <div class="layui-col-sm12 layui-col-md12">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">角色</label>
+                    <div class="layui-input-block">
+                        <select name="type" lay-verify="required">
+                            <option value="1">客户</option>
+                            <option value="2">服务商</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-sm12 la yui-col-md12">
+                <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="registerSubmit">立即注册</button>
+                <p style="width: 100%;margin-top: 15px">
+                    <a href="http://localhost:8080/service_rental/login.html" class="fl">已有账号？立即登录</a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- LoginForm End -->
+
+
+<!-- Layui Js -->
+<script type="text/javascript" src="../static/layui/layui.js" th:src="@{/layui/layui.js}"></script>
+<script>
+    layui.use(['jquery','form'], function(){
+        var form = layui.form;
+        var $ = layui.jquery;  //直接引入官方的Jquery来和平常一样使用
+        //自定义验证规则
+        form.verify({
+            userName: function(value){
+                if(value.length < 3){
+                    return '账号至少得3个字符';
+                }else if(value.length > 10){
+                    return '账号至多得10个字符';
+                }
+            },
+            password: [/^[\S]{3,12}$/,'密码必须3到12位，且不能出现空格'],
+            password02: function(value){
+                if(!(/^[\S]{3,12}$/.test(value))){
+                    return "确认密码必须3到12位，且不能出现空格";
+                }else if ($('#password').val() !== $('#password02').val()) {
+                    return '两次密码不一致';
+                }
+            }
+        });
+        //监听提交
+        form.on('submit(registerSubmit)', function(data){
+
+            // 设置按钮文字“注册中...”及禁止点击状态
+            $(data.elem).attr('disabled', true).text('注册中...');
+
+            // 网络请求
+            var loadIndex = layer.load(2);
+
+            $.ajax({
+                method: "POST",
+                url: 'http://localhost:8080/service_rental/user/register',
+                data: JSON.stringify(data.field),
+                async: false,
+                contentType: "application/json;charset=UTF-8",
+                dataType: "json",
+                beforeSend: function () {
+                    // TODO...
+                },
+                success: function (res) {
+
+                    layer.close(loadIndex);
+
+                    if (res.code === 1000) {
+                        // 设置注册成功状态
+                        $(data.elem).attr('disabled', true).text('注册成功');
+
+                        // 提示语
+                        layer.msg('注册成功', {
+                            icon: 1,
+                            time: 1500
+                        });
+                        // 延迟1秒
+                        setTimeout(function () {
+                            // 跳转登录页
+                            window.location.href = "http://localhost:8080/service_rental/login.html";
+                        }, 1000);
+                        return false;
+                    } else {
+                        // 错误信息
+                        layer.msg(res.message, {icon: 2, anim: 6});
+
+                        // 延迟2秒恢复可注册状态
+                        setTimeout(function () {
+                            // 设置按钮状态为注册
+                            var register_text = $(data.elem).text().replace('...', '');
+                            // 设置按钮为可点击状态
+                            $(data.elem).text(register_text).removeAttr('disabled');
+                        }, 2000);
+                    }
+                },
+                error: function () {
+                    layer.msg("AJAX请求异常");
+                    layer.alert("AJAX请求异常，返回结果："+res);
+                }
+            });
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

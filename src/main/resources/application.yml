@@ -1,0 +1,36 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /service_rental
+  tomcat:
+    uri-encoding: UTF-8
+
+spring:
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://localhost:3306/service_rental?serverTimezone=Asia/Shanghai&useUnicode=true&allowMultiQueries=true&useAffectedRows=true
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.mchange.v2.c3p0.ComboPooledDataSource
+  thymeleaf:
+    mode: HTML5
+    encoding: UTF-8
+    servlet:
+      content-type: text/html
+    #缓存设置为false, 这样修改之后马上生效，便于调试
+    cache: false
+
+# 分页插件
+pagehelper:
+  helperDialect: mysql
+  reasonable: true  # 合理化分页
+  supportMethodsArguments: true
+  params: count=countSql
+
+mybatis:
+  type-aliases-package: com.lzc.serviceRental.entity.model
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    default-executor-type: simple
+    map-underscore-to-camel-case: true  #开启驼峰

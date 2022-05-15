@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>更新用户信息</title>
+    <link rel="stylesheet" href="../static/layui/css/layui.css" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" href="../static/layer/theme/default/layer.css" th:href="@{/layer/theme/default/layer.css}"/>
+</head>
+<body>
+
+<form class="layui-form" action="">
+
+    <label class="layui-form-label">用户名</label>
+    <div class="layui-form-mid layui-word-aux"><span th:text="${session.user.userName}"></span></div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">联系方式</label>
+        <div class="layui-input-inline">
+            <input type="text" name="contactType" id="contactType" placeholder="请输入联系方式" autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid layui-word-aux"><span th:text="${session.user.contactType}"></span></div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">联系号</label>
+        <div class="layui-input-inline">
+            <input type="text" name="contactNum" id="contactNum" placeholder="请输入联系号" autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid layui-word-aux"><span th:text="${session.user.contactNum}"></span></div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">单选框</label>
+        <div class="layui-input-block">
+            <input type="radio" name="sex" value="未知" title="未知">
+            <input type="radio" name="sex" value="男" title="男">
+            <input type="radio" name="sex" value="女" title="女">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+
+
+<script type="text/javascript" src="../static/layui/layui.js" th:src="@{/layui/layui.js}"></script>
+<script type="text/javascript" th:inline="javascript">
+    layui.use('form', function(){
+
+        var form = layui.form;
+        var $ = layui.jquery;  //直接引入官方的Jquery来和平常一样使用
+        var later = layer;
+
+        $(function () {
+            var json = '[[${session.user}]]';
+            var user = JSON.parse(json);
+
+            $('#contactType').attr('value',user.contactType);
+            $('#contactNum').attr('value',user.contactNum);
+
+            if('未知' === user.sex){
+                $("input[name=sex][value=未知]").attr("checked",true);
+            }else if('男' === user.sex){
+                $("input[name=sex][value=男]").attr("checked",true);
+            }
+            else if('女' === user.sex){
+                $("input[name=sex][value=女]").attr("checked",true);
+            }
+            form.render(); //更新全部
+        });
+
+        //监听提交
+        form.on('submit(formDemo)', function(data){
+            $.ajax({
+                method: "POST",
+                url: 'http://localhost:8080/service_rental/user/updateUser',
+                data: JSON.stringify(data.field),
+                async: false,
+                contentType: "application/json;charset=UTF-8",
+                dataType: "json",
+                success: function (res) {
+                    if (res.code === 1000) {
+                        // 提示语
+                        layer.msg('修改成功', {
+                            icon: 1,
+                            time: 1500
+                        });
+                    } else {
+                        // 错误信息
+                        layer.msg(res.message, {icon: 2, anim: 6});
+                    }
+                },
+                error: function () {
+                    layer.msg("AJAX请求异常");
+                    layer.alert("AJAX请求异常，返回结果："+res);
+                }
+            });
+            //return false;
+        });
+
+    });
+</script>
+</body>
+</html>
